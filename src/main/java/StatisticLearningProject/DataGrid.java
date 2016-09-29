@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import javax.swing.table.DefaultTableModel;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
@@ -20,8 +21,8 @@ import org.apache.commons.csv.CSVRecord;
  */
 public class DataGrid {
     
-    private ArrayList<CSVRecord> records = null;
     private String loadError = "";
+    private DefaultTableModel tableModel;
     
     public DataGrid(File f){
         Reader in = null;
@@ -37,15 +38,31 @@ public class DataGrid {
         }
                 
         try{
-           this.records = Lists.newArrayList(CSVFormat.EXCEL.parse(in));         
+            ArrayList<CSVRecord> records = Lists.newArrayList(CSVFormat.EXCEL.parse(in)); 
+            CSVRecord headerRec = records.remove(0);
+            int columns = headerRec.size();
+            String[] headers = new String[columns];
+            for(int i=0; i < columns; i++){ 
+               headers[i]= (String)headerRec.get(i);
+            }
+            int rows = records.size();
+            Object[][] data = new Object[rows][columns];
+            int count = 0;
+            for(CSVRecord record: records){
+                for(int i=0; i < columns; i++){
+                   data[count][i]= record.get(i);
+                }
+                count++;
+           }
+           tableModel = new DefaultTableModel(data,headers);
         }catch(IOException e){
             loadError = e.getMessage();
     
         }        
     }
     
-    ArrayList<CSVRecord> getRecords(){
-        return records;
+    public DefaultTableModel getTableModel(){
+        return this.tableModel;
     }
     
     public boolean isSuccess(){
